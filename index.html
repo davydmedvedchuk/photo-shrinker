@@ -69,6 +69,7 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
 .note { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); font: 12px/1.6 var(--mono); color: var(--muted); }
 .err { color: #C0392B; }
 @media (prefers-reduced-motion: no-preference) { .dl, .ghost { transition: opacity .15s; } .dl:hover, .ghost:hover { opacity: .85; } }
+header a.back,.back{display:inline-flex;align-items:center;min-height:44px;padding:0 6px}
 </style>
 </head>
 <body>
@@ -111,7 +112,7 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
         <option value="400">400 px</option>
         <option value="custom">Custom…</option>
       </select>
-      <input id="custom" type="number" inputmode="numeric" min="16" max="12000" placeholder="px" hidden>
+      <input id="custom" aria-label="Custom size in pixels" type="number" inputmode="numeric" min="16" max="12000" placeholder="px" hidden>
     </label>
     <label class="opt" id="mWrap">Resize method
       <select id="method">
@@ -120,7 +121,7 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
       </select>
     </label>
     <label class="opt" id="qWrap"><span>Quality <output id="qOut">80</output></span>
-      <input id="q" type="range" min="30" max="95" value="80">
+      <input id="q" aria-label="Quality" type="range" min="30" max="95" value="80">
     </label>
     <label class="opt" id="tWrap">Max file size
       <select id="target">
