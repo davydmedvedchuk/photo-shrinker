@@ -51,6 +51,8 @@ python3 cli/shrink.py ./photos -r -f webp --zip     # subfolders too, WebP, one 
 
 Options: `-s` size, `-f` format (jpg, png, webp, bmp, ico), `-q` quality, `-m` max KB, `-r` recursive, `--zip`, `--pdf`, `-o` output folder. HEIC works. Like the web app, it keeps the original if it can't make the file smaller.
 
+**No Python?** A Windows `shrink.exe` is built by GitHub Actions (`.github/workflows/build-exe.yml`). Run it from the Actions tab, or push a tag like `v1.0` and the exe appears under Releases. Then: `shrink.exe C:\\photos -s 1200`.
+
 ## Rebuilding the C++ part
 
 The compiled `wasm/resize.wasm` is in the repo, so you don't need to build anything. To change `resize.cpp`, you need clang with the wasm32 target and `wasm-ld`:
