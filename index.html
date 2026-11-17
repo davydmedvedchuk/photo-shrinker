@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Photo shrinker</title>
+<meta name="description" content="Compress, resize and convert photos in your browser. JPEG, PNG, WebP, BMP, ICO, PDF, ZIP. Nothing is uploaded.">
+<meta name="theme-color" content="#F3F3F0" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131417" media="(prefers-color-scheme: dark)">
+<link rel="icon" type="image/svg+xml" href="logo.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #F3F3F0; --surface: #FFFFFF; --ink: #15171B; --muted: #62666F;
+  --line: #D5D6D9; --line2: #B4B7BD; --mark: #F5C518; --mark-ink: #15171B; --good: #1E7B3A;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "Archivo", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #131417; --surface: #1B1D21; --ink: #ECEDEF; --muted: #9EA2AA; --line: #2C2F35; --line2: #454952; --good: #5FD08A; color-scheme: dark; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); -webkit-font-smoothing: antialiased; -webkit-text-size-adjust: 100%; }
+button, select, input { font: inherit; color: inherit; }
+.wrap { max-width: 760px; margin: 0 auto; padding: max(32px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(40px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)); }
+.top { display: flex; align-items: center; gap: 14px; padding-bottom: 20px; border-bottom: 2px solid var(--ink); }
+.logo { width: 64px; height: 48px; flex: none; display: block; }
+h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch: 125%; letter-spacing: -.01em; }
+.sub { margin: 6px 0 0; font: 400 12.5px/1.5 var(--mono); color: var(--muted); }
+.back { margin-left: auto; white-space: nowrap; font: 500 12px var(--mono); color: var(--ink); text-underline-offset: 3px; }
+
+.drop { display: grid; gap: 6px; place-items: center; text-align: center; margin-top: 24px; padding: 36px 16px; border: 1px dashed var(--line2); cursor: pointer; transition: background .15s, border-color .15s; }
+.drop.over { background: var(--surface); border-color: var(--ink); }
+.drop strong { font: 700 20px var(--display); font-stretch: 112%; }
+.drop span { font: 12px var(--mono); color: var(--muted); }
+.drop input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.drop:focus-within { outline: 2px solid currentColor; outline-offset: 3px; }
+
+.opts { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-top: 20px; }
+.opt { display: grid; gap: 6px; align-content: start; font: 500 11.5px var(--mono); text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.opt select, .opt input[type=number] { width: 100%; background: var(--surface); border: 1px solid var(--line2); padding: 10px 12px; font: 500 15px var(--body); text-transform: none; letter-spacing: 0; color: var(--ink); border-radius: 0; min-height: 44px; }
+.opt input[type=range] { width: 100%; accent-color: var(--ink); min-height: 44px; }
+.opt output { color: var(--ink); }
+.opt.off { opacity: .45; pointer-events: none; }
+.opt [hidden] { display: none; }
+
+.list { list-style: none; margin: 24px 0 0; padding: 0; display: grid; gap: 10px; }
+.item { display: grid; grid-template-columns: 64px 1fr auto; gap: 12px; align-items: center; background: var(--surface); border: 1px solid var(--line); padding: 10px; }
+.thumb { width: 64px; height: 64px; object-fit: cover; background: var(--line); }
+.info { min-width: 0; display: grid; gap: 3px; }
+.fname { font: 600 14px var(--body); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sizes { font: 400 12.5px var(--mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+.sizes b { color: var(--ink); font-weight: 500; }
+.saved { color: var(--good); font-weight: 500; }
+.dl { background: var(--ink); color: var(--bg); border: 0; padding: 0 14px; min-height: 44px; font: 600 14px var(--body); text-decoration: none; display: inline-grid; place-items: center; cursor: pointer; }
+.dl[aria-disabled=true] { opacity: .4; pointer-events: none; }
+.dl[disabled] { opacity: .5; pointer-events: none; }
+
+.bar { position: sticky; bottom: 0; display: none; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 16px; padding: 12px 0 max(12px, env(safe-area-inset-bottom)); background: var(--bg); border-top: 1px solid var(--line); }
+.bar.show { display: flex; }
+.total { flex: 1 1 100%; font: 500 13px var(--mono); font-variant-numeric: tabular-nums; }
+.ghost { background: transparent; color: var(--ink); border: 1px solid var(--ink); padding: 0 14px; min-height: 44px; font: 600 14px var(--body); cursor: pointer; }
+.ghost[disabled] { opacity: .5; pointer-events: none; }
+.spacer { flex: 1; }
+.note { margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--line); font: 12px/1.6 var(--mono); color: var(--muted); }
+.err { color: #C0392B; }
+@media (prefers-reduced-motion: no-preference) { .dl, .ghost { transition: opacity .15s; } .dl:hover, .ghost:hover { opacity: .85; } }
+</style>
+</head>
+<body>
+<main class="wrap">
+  <header class="top">
+    <img class="logo" src="logo.svg" width="64" height="48" alt="">
+    <div>
+      <h1>Photo shrinker</h1>
+      <p class="sub">Resize, compress, convert. Nothing leaves your device.</p>
+    </div>
+    <a class="back" href="../">← all</a>
+  </header>
+
+  <label class="drop" id="drop">
+    <strong>Choose photos</strong>
+    <span>or drop them here</span>
+    <span>JPG · PNG · WebP · HEIC · more</span>
+    <input id="file" type="file" accept="image/*,.heic,.heif" multiple>
+  </label>
+
+  <section class="opts" aria-label="Settings">
+    <label class="opt">Format
+      <select id="fmt">
+        <option value="image/jpeg" selected>JPEG</option>
+        <option value="image/png">PNG</option>
+        <option value="image/webp" id="webpOpt">WebP</option>
+        <option value="image/bmp">BMP</option>
+        <option value="image/x-icon">ICO (icon)</option>
+      </select>
+    </label>
+    <label class="opt">Longest side
+      <select id="size">
+        <option value="0">Original</option>
+        <option value="3000">3000 px</option>
+        <option value="2048" selected>2048 px</option>
+        <option value="1600">1600 px</option>
+        <option value="1200">1200 px</option>
+        <option value="800">800 px</option>
+        <option value="400">400 px</option>
+        <option value="custom">Custom…</option>
+      </select>
+      <input id="custom" type="number" inputmode="numeric" min="16" max="12000" placeholder="px" hidden>
+    </label>
+    <label class="opt" id="qWrap"><span>Quality <output id="qOut">80</output></span>
+      <input id="q" type="range" min="30" max="95" value="80">
+    </label>
+    <label class="opt" id="tWrap">Max file size
+      <select id="target">
+        <option value="0" selected>Off</option>
+        <option value="102400">100 KB</option>
+        <option value="204800">200 KB</option>
+        <option value="512000">500 KB</option>
+        <option value="1048576">1 MB</option>
+        <option value="2097152">2 MB</option>
+      </select>
+    </label>
+  </section>
+
+  <ul class="list" id="list"></ul>
+
+  <div class="bar" id="bar">
+    <span class="total" id="total"></span>
+    <button class="ghost" id="clear">Clear</button>
+    <span class="spacer"></span>
+    <button class="ghost" id="share" hidden>Share / Save</button>
+    <button class="ghost" id="pdf">PDF</button>
+    <button class="dl" id="zip">Download all (ZIP)</button>
+  </div>
+
+  <p class="note">Re-encoding strips EXIF data, including GPS location. Photos are processed in this tab and never uploaded. “Max file size” lowers quality (and size if needed) until each photo fits. PDF puts every photo on its own A4 page.</p>
+</main>
+
+<script>
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const drop = $('drop'), fileIn = $('file'), list = $('list'), bar = $('bar'), total = $('total');
+  const sizeSel = $('size'), customIn = $('custom'), fmtSel = $('fmt'), targetSel = $('target');
+  const q = $('q'), qOut = $('qOut'), qWrap = $('qWrap'), tWrap = $('tWrap');
+  const shareBtn = $('share'), zipBtn = $('zip'), pdfBtn = $('pdf'), clearBtn = $('clear');
+
+  const LOSSY = new Set(['image/jpeg', 'image/webp']);
+  const EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp', 'image/bmp': 'bmp', 'image/x-icon': 'ico' };
+
+  let files = [];   // { file, src, row, blob, url, name, kept }
+  let run = 0;      // generation token: a newer run cancels the older one
+
+  // Some browsers can't encode WebP through canvas. Hide it there.
+  const canEncode = (t) => { const c = document.createElement('canvas'); c.width = c.height = 1; return c.toDataURL(t).startsWith('data:' + t); };
+  if (!canEncode('image/webp')) $('webpOpt').remove();
+
+  const fmtBytes = (n) => n < 1024 ? n + ' B' : n < 1048576 ? Math.round(n / 1024) + ' KB' : (n / 1048576).toFixed(1) + ' MB';
+  const baseName = (n) => n.replace(/\.[^.]+$/, '') || 'photo';
+  const isHeic = (f) => /\.(heic|heif)$/i.test(f.name) || /image\/hei[cf]/i.test(f.type);
+
+  /* ---------- input ---------- */
+  function addFiles(fl) {
+    const imgs = [...fl].filter((f) => f.type.startsWith('image/') || isHeic(f));
+    if (!imgs.length) return;
+    for (const f of imgs) files.push({ file: f, src: f, row: makeRow(f), blob: null, url: null, name: '', kept: false });
+    process();
+  }
+
+  function makeRow(f) {
+    const li = document.createElement('li');
+    li.className = 'item';
+    li.innerHTML = '<img class="thumb" alt=""><div class="info"><div class="fname"></div><div class="sizes">Working…</div></div><a class="dl" aria-disabled="true">Save</a>';
+    li.querySelector('.fname').textContent = f.name;
+    list.appendChild(li);
+    return li;
+  }
+
+  /* ---------- decoding (HEIC via a bundled library, loaded only when needed) ---------- */
+  let heicLoad;
+  const loadHeic = () => heicLoad || (heicLoad = new Promise((res, rej) => {
+    const s = document.createElement('script');
+    s.src = 'vendor/heic2any.min.js'; s.onload = res; s.onerror = () => rej(new Error('HEIC library failed to load'));
+    document.head.appendChild(s);
+  }));
+
+  async function getBitmap(it) {
+    try { return await createImageBitmap(it.src); }   // applies EXIF orientation
+    catch (e) {
+      if (!isHeic(it.file) || it.src !== it.file) throw e;
+      await loadHeic();
+      const out = await window.heic2any({ blob: it.file, toType: 'image/jpeg', quality: 0.95 });
+      it.src = Array.isArray(out) ? out[0] : out;
+      return await createImageBitmap(it.src);
+    }
+  }
+
+  /* ---------- encoders ---------- */
+  function bmpBlob(ctx, w, h) {
+    const px = ctx.getImageData(0, 0, w, h).data, row = (w * 3 + 3) & ~3, size = 54 + row * h;
+    const buf = new ArrayBuffer(size), dv = new DataView(buf), u8 = new Uint8Array(buf);
+    dv.setUint8(0, 0x42); dv.setUint8(1, 0x4D); dv.setUint32(2, size, true); dv.setUint32(10, 54, true);
+    dv.setUint32(14, 40, true); dv.setInt32(18, w, true); dv.setInt32(22, h, true); dv.setUint16(26, 1, true); dv.setUint16(28, 24, true);
+    dv.setUint32(34, row * h, true); dv.setUint32(38, 2835, true); dv.setUint32(42, 2835, true);
+    for (let y = 0; y < h; y++) {
+      let o = 54 + (h - 1 - y) * row, i = y * w * 4;
+      for (let x = 0; x < w; x++, i += 4) { u8[o++] = px[i + 2]; u8[o++] = px[i + 1]; u8[o++] = px[i]; }
+    }
+    return new Blob([buf], { type: 'image/bmp' });
+  }
+
+  async function icoBlob(bmp, w, h) {
+    const S = Math.min(256, Math.max(w, h)), k = Math.min(S / w, S / h);
+    const dw = Math.max(1, Math.round(w * k)), dh = Math.max(1, Math.round(h * k));
+    const cv = document.createElement('canvas'); cv.width = cv.height = S;
+    cv.getContext('2d').drawImage(bmp, (S - dw) / 2, (S - dh) / 2, dw, dh);
+    const png = new Uint8Array(await (await new Promise((res) => cv.toBlob(res, 'image/png'))).arrayBuffer());
+    const head = new DataView(new ArrayBuffer(22));
+    head.setUint16(2, 1, true); head.setUint16(4, 1, true);
+    head.setUint8(6, S === 256 ? 0 : S); head.setUint8(7, S === 256 ? 0 : S);
+    head.setUint16(10, 1, true); head.setUint16(12, 32, true); head.setUint32(14, png.length, true); head.setUint32(18, 22, true);
+    return { blob: new Blob([head, png], { type: 'image/x-icon' }), w: S, h: S };
+  }
+
+  // Find the best quality that keeps the file under `target` bytes. null = even the lowest quality is too big.
+  async function fitTarget(enc, target) {
+    let lo = 0.15, hi = 0.92;
+    const low = await enc(lo);
+    if (low.size > target) return null;
+    const top = await enc(hi);
+    if (top.size <= target) return { blob: top, q: hi };
+    let best = { blob: low, q: lo };
+    for (let i = 0; i < 6; i++) {
+      const mid = (lo + hi) / 2, m = await enc(mid);
+      if (m.size <= target) { best = { blob: m, q: mid }; lo = mid; } else hi = mid;
+    }
+    return best;
+  }
+
+  function settings() {
+    let maxSide = +sizeSel.value;
+    if (sizeSel.value === 'custom') maxSide = Math.max(0, Math.min(12000, +customIn.value || 0));
+    return { maxSide, type: fmtSel.value, quality: q.value / 100, target: +targetSel.value };
+  }
+
+  async function encodeItem(it, S) {
+    const f = it.file, bmp = await getBitmap(it);
+    const ow = bmp.width, oh = bmp.height;
+    let w = ow, h = oh;
+    if (S.maxSide && Math.max(w, h) > S.maxSide) {
+      const k = S.maxSide / Math.max(w, h);
+      w = Math.round(w * k); h = Math.round(h * k);
+    }
+    const lossy = LOSSY.has(S.type), target = lossy ? S.target : 0;
+    const cv = document.createElement('canvas'), ctx = cv.getContext('2d', { willReadFrequently: S.type === 'image/bmp' });
+    const draw = (dw, dh) => {
+      cv.width = dw; cv.height = dh;
+      if (S.type === 'image/jpeg' || S.type === 'image/bmp') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, dw, dh); }
+      ctx.drawImage(bmp, 0, 0, dw, dh);
+    };
+    const enc = (qv) => new Promise((res) => cv.toBlob(res, S.type, qv));
+    let blob, outW = w, outH = h, usedQ = S.quality;
+
+    if (S.type === 'image/x-icon') {
+      const r = await icoBlob(bmp, w, h); blob = r.blob; outW = r.w; outH = r.h;
+    } else if (S.type === 'image/bmp') {
+      draw(w, h); blob = bmpBlob(ctx, w, h);
+    } else if (!lossy) {
+      draw(w, h); blob = await enc();
+    } else if (!target) {
+      draw(w, h); blob = await enc(usedQ);
+      // Same size and format but bigger? The photo is already compressed. Try lower quality.
+      if (w === ow && h === oh && f.type === S.type) {
+        while (blob.size >= f.size && usedQ > 0.4) { usedQ = Math.max(0.4, usedQ - 0.15); blob = await enc(usedQ); }
+      }
+    } else {
+      let scale = 1;
+      for (let i = 0; i < 12; i++) {
+        outW = Math.max(1, Math.round(w * scale)); outH = Math.max(1, Math.round(h * scale));
+        draw(outW, outH);
+        const r = await fitTarget(enc, target);
+        if (r) { blob = r.blob; usedQ = r.q; break; }
+        scale *= 0.85;
+        if (i === 11) { blob = await enc(0.15); usedQ = 0.15; }
+      }
+    }
+    if (bmp.close) bmp.close();
+    if (!blob) throw new Error('encode failed');
+
+    // Already small and the same format: keep the original instead of making it bigger.
+    const same = outW === ow && outH === oh && f.type === S.type && S.type !== 'image/x-icon' && S.type !== 'image/bmp';
+    if (!S.noKeep && same && blob.size >= f.size) return { blob: f, w: outW, h: outH, kept: true };
+    return { blob, w: outW, h: outH, q: lossy && Math.abs(usedQ - S.quality) > 0.005 ? Math.round(usedQ * 100) : 0 };
+  }
+
+  /* ---------- main loop ---------- */
+  async function process() {
+    const my = ++run, S = settings(), lossy = LOSSY.has(S.type);
+    qWrap.classList.toggle('off', !lossy || S.target > 0);
+    tWrap.classList.toggle('off', !lossy);
+    for (const it of files) {
+      if (my !== run) return;
+      const sizes = it.row.querySelector('.sizes'), a = it.row.querySelector('.dl'), th = it.row.querySelector('.thumb');
+      sizes.textContent = 'Working…'; a.setAttribute('aria-disabled', 'true');
+      try {
+        const r = await encodeItem(it, S);
+        if (my !== run) return;
+        if (it.url) URL.revokeObjectURL(it.url);
+        it.blob = r.blob; it.kept = !!r.kept; it.url = URL.createObjectURL(r.blob);
+        it.name = r.kept ? it.file.name : baseName(it.file.name) + '-small.' + (EXT[r.blob.type] || EXT[S.type] || 'jpg');
+        th.src = it.url;
+        const diff = Math.round((1 - r.blob.size / it.file.size) * 100);
+        const over = S.target > 0 && r.blob.size > S.target;
+        sizes.innerHTML = r.kept
+          ? '<b>' + fmtBytes(it.file.size) + '</b> · ' + r.w + '×' + r.h + ' · <span>already small</span>'
+          : '<b>' + fmtBytes(it.file.size) + '</b> → <b>' + fmtBytes(r.blob.size) + '</b> · ' + r.w + '×' + r.h +
+            (diff > 0 ? ' · <span class="saved">−' + diff + '%</span>' : ' · <span>+' + Math.abs(diff) + '%</span>') +
+            (r.q ? ' · q' + r.q : '') + (over ? ' · <span class="err">over limit</span>' : '');
+        a.href = it.url; a.download = it.name; a.removeAttribute('aria-disabled');
+      } catch (e) {
+        it.blob = null;
+        sizes.innerHTML = '<span class="err">' + (isHeic(it.file) ? 'Can’t read this HEIC file.' : 'Can’t read this file.') + '</span>';
+      }
+    }
+    if (my === run) updateTotal();
+  }
+
+  function updateTotal() {
+    const ok = files.filter((f) => f.blob);
+    bar.classList.toggle('show', files.length > 0);
+    if (!files.length) return;
+    const before = ok.reduce((s, f) => s + f.file.size, 0), after = ok.reduce((s, f) => s + f.blob.size, 0);
+    const kept = ok.filter((f) => f.kept).length;
+    total.textContent = ok.length + (ok.length === 1 ? ' photo · ' : ' photos · ') + fmtBytes(before) + ' → ' + fmtBytes(after) + (kept ? ' · ' + kept + ' already small' : '');
+    zipBtn.textContent = ok.length === 1 ? 'Download' : 'Download all (ZIP)';
+    pdfBtn.hidden = !ok.length; zipBtn.hidden = !ok.length;
+    const probe = ok.map((f) => new File([f.blob], f.name, { type: f.blob.type }));
+    shareBtn.hidden = !(ok.length && navigator.canShare && navigator.canShare({ files: probe }));
+  }
+
+  /* ---------- ZIP (store, no compression: photos are already compressed) ---------- */
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = (u8) => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+
+  async function makeZip(items) {
+    const enc = new TextEncoder(), d = new Date();
+    const time = (d.getHours() << 11) | (d.getMinutes() << 5) | (d.getSeconds() >> 1);
+    const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+    const parts = [], central = [], used = new Set();
+    let offset = 0;
+    for (const it of items) {
+      let name = it.name, n = 1;
+      while (used.has(name)) name = it.name.replace(/(\.[^.]+)$/, '-' + (++n) + '$1');
+      used.add(name);
+      const data = new Uint8Array(await it.blob.arrayBuffer()), nm = enc.encode(name), crc = crc32(data);
+      const lh = new DataView(new ArrayBuffer(30));
+      lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+      lh.setUint16(10, time, true); lh.setUint16(12, date, true); lh.setUint32(14, crc, true);
+      lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nm.length, true); lh.setUint16(28, 0, true);
+      const ch = new DataView(new ArrayBuffer(46));
+      ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+      ch.setUint16(12, time, true); ch.setUint16(14, date, true); ch.setUint32(16, crc, true);
+      ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nm.length, true);
+      ch.setUint32(42, offset, true);
+      parts.push(lh, nm, data);
+      central.push(ch, nm);
+      offset += 30 + nm.length + data.length;
+    }
+    const cSize = central.reduce((s, p) => s + (p.byteLength ?? p.length), 0);
+    const end = new DataView(new ArrayBuffer(22));
+    end.setUint32(0, 0x06054b50, true); end.setUint16(8, items.length, true); end.setUint16(10, items.length, true);
+    end.setUint32(12, cSize, true); end.setUint32(16, offset, true);
+    return new Blob([...parts, ...central, end], { type: 'application/zip' });
+  }
+
+  /* ---------- PDF: one JPEG per A4 page ---------- */
+  function buildPdf(pages) {
+    const enc = new TextEncoder(), chunks = [], offs = [];
+    let len = 0;
+    const put = (x) => { const u = typeof x === 'string' ? enc.encode(x) : x; chunks.push(u); len += u.length; };
+    const num = (n) => (Math.round(n * 100) / 100).toString();
+    put('%PDF-1.4\n%âãÏÓ\n');
+    const obj = (n, body) => { offs[n] = len; put(n + ' 0 obj\n'); body(); put('\nendobj\n'); };
+    const count = 2 + pages.length * 3;
+    obj(1, () => put('<< /Type /Catalog /Pages 2 0 R >>'));
+    obj(2, () => put('<< /Type /Pages /Count ' + pages.length + ' /Kids [' + pages.map((_, i) => (3 + i * 3) + ' 0 R').join(' ') + '] >>'));
+    pages.forEach((p, i) => {
+      const pg = 3 + i * 3, ct = pg + 1, im = pg + 2, land = p.w > p.h;
+      const W = land ? 842 : 595, H = land ? 595 : 842, m = 24;
+      const k = Math.min((W - 2 * m) / p.w, (H - 2 * m) / p.h), dw = p.w * k, dh = p.h * k;
+      const x = (W - dw) / 2, y = (H - dh) / 2;
+      const content = 'q ' + num(dw) + ' 0 0 ' + num(dh) + ' ' + num(x) + ' ' + num(y) + ' cm /Im0 Do Q';
+      obj(pg, () => put('<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ' + W + ' ' + H + '] /Resources << /XObject << /Im0 ' + im + ' 0 R >> >> /Contents ' + ct + ' 0 R >>'));
+      obj(ct, () => { put('<< /Length ' + content.length + ' >>\nstream\n' + content + '\nendstream'); });
+      obj(im, () => {
+        put('<< /Type /XObject /Subtype /Image /Width ' + p.w + ' /Height ' + p.h + ' /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ' + p.jpeg.length + ' >>\nstream\n');
+        put(p.jpeg); put('\nendstream');
+      });
+    });
+    const xref = len;
+    let x = 'xref\n0 ' + (count + 1) + '\n0000000000 65535 f \n';
+    for (let n = 1; n <= count; n++) x += String(offs[n]).padStart(10, '0') + ' 00000 n \n';
+    put(x + 'trailer\n<< /Size ' + (count + 1) + ' /Root 1 0 R >>\nstartxref\n' + xref + '\n%%EOF\n');
+    return new Blob(chunks, { type: 'application/pdf' });
+  }
+
+  /* ---------- actions ---------- */
+  function save(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }
+
+  zipBtn.addEventListener('click', async () => {
+    const ok = files.filter((f) => f.blob);
+    if (!ok.length) return;
+    if (ok.length === 1) return save(ok[0].blob, ok[0].name);
+    save(await makeZip(ok), 'photos-small.zip');
+  });
+
+  pdfBtn.addEventListener('click', async () => {
+    const ok = files.filter((f) => f.blob);
+    if (!ok.length) return;
+    const label = pdfBtn.textContent;
+    pdfBtn.disabled = true; pdfBtn.textContent = 'Making PDF…';
+    try {
+      const S = { ...settings(), type: 'image/jpeg', noKeep: true };
+      const pages = [];
+      for (const it of ok) {
+        const r = await encodeItem(it, S);
+        pages.push({ jpeg: new Uint8Array(await r.blob.arrayBuffer()), w: r.w, h: r.h });
+      }
+      save(buildPdf(pages), 'photos.pdf');
+    } catch (e) {
+      total.innerHTML = '<span class="err">Couldn’t make the PDF.</span>';
+    }
+    pdfBtn.disabled = false; pdfBtn.textContent = label;
+  });
+
+  shareBtn.addEventListener('click', async () => {
+    const ok = files.filter((f) => f.blob);
+    try { await navigator.share({ files: ok.map((f) => new File([f.blob], f.name, { type: f.blob.type })) }); } catch (e) { /* cancelled */ }
+  });
+
+  clearBtn.addEventListener('click', () => {
+    run++;
+    files.forEach((f) => f.url && URL.revokeObjectURL(f.url));
+    files = []; list.innerHTML = ''; updateTotal();
+  });
+
+  fileIn.addEventListener('change', () => { addFiles(fileIn.files); fileIn.value = ''; });
+  ['dragenter', 'dragover'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((e) => drop.addEventListener(e, (ev) => { ev.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', (ev) => addFiles(ev.dataTransfer.files));
+
+  const again = () => files.length && process();
+  [fmtSel, targetSel].forEach((el) => el.addEventListener('change', () => { process(); }));
+  sizeSel.addEventListener('change', () => { customIn.hidden = sizeSel.value !== 'custom'; if (!customIn.hidden) customIn.focus(); again(); });
+  let t1; customIn.addEventListener('input', () => { clearTimeout(t1); t1 = setTimeout(again, 400); });
+  let t2; q.addEventListener('input', () => { qOut.textContent = q.value; clearTimeout(t2); t2 = setTimeout(again, 250); });
+  process();   // sets the initial enabled/disabled state of the settings
+})();
+</script>
+</body>
+</html>
