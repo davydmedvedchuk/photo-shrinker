@@ -11,6 +11,7 @@ Pick photos, choose a size and a format, save. One photo or a ZIP. It runs entir
 ## What it does
 
 - **Resize.** Longest side: original, 3000, 2048, 1600, 1200, 800, 400 px or any number you type.
+- **Sharp resizing in C++.** The default resize method is a Lanczos-3 resampler written in C++ (`wasm/resize.cpp`), compiled to WebAssembly (4 KB). It keeps edges cleaner than the browser's own scaler and handles transparency correctly. If it can't load, or the photo is over 36 megapixels, the app switches to the browser scaler by itself. Pick "Fast (browser)" to turn it off.
 - **Compress.** A quality slider for JPEG and WebP.
 - **Max file size.** Say "under 200 KB" and it finds the best quality that fits. If quality alone is not enough, it shrinks the picture a little.
 - **Convert.** Save as JPEG, PNG, WebP, BMP or ICO.
@@ -36,6 +37,16 @@ python3 -m http.server
 ```
 
 Then go to `http://localhost:8000`.
+
+## Rebuilding the C++ part
+
+The compiled `wasm/resize.wasm` is in the repo, so you don't need to build anything. To change `resize.cpp`, you need clang with the wasm32 target and `wasm-ld`:
+
+```
+./wasm/build.sh
+```
+
+No Emscripten and no libc: the module has its own allocator and math.
 
 ## How it works
 

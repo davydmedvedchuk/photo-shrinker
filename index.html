@@ -114,6 +114,12 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
       </select>
       <input id="custom" type="number" inputmode="numeric" min="16" max="12000" placeholder="px" hidden>
     </label>
+    <label class="opt" id="mWrap">Resize method
+      <select id="method">
+        <option value="sharp" selected>Sharp (C++ Lanczos)</option>
+        <option value="fast">Fast (browser)</option>
+      </select>
+    </label>
     <label class="opt" id="qWrap"><span>Quality <output id="qOut">80</output></span>
       <input id="q" type="range" min="30" max="95" value="80">
     </label>
@@ -147,7 +153,7 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
 (() => {
   const $ = (id) => document.getElementById(id);
   const drop = $('drop'), fileIn = $('file'), list = $('list'), bar = $('bar'), total = $('total');
-  const sizeSel = $('size'), customIn = $('custom'), fmtSel = $('fmt'), targetSel = $('target');
+  const sizeSel = $('size'), customIn = $('custom'), fmtSel = $('fmt'), targetSel = $('target'), methodSel = $('method');
   const q = $('q'), qOut = $('qOut'), qWrap = $('qWrap'), tWrap = $('tWrap');
   const shareBtn = $('share'), zipBtn = $('zip'), pdfBtn = $('pdf'), clearBtn = $('clear');
 
@@ -228,6 +234,46 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
     return { blob: new Blob([head, png], { type: 'image/x-icon' }), w: S, h: S };
   }
 
+  /* ---------- C++ resizer (WebAssembly) ---------- */
+  // wasm/resize.cpp is a Lanczos-3 resampler written in plain C++ and compiled with clang.
+  // If it can't load or the photo is too big, we quietly use the browser's own scaler.
+  let wasmP = null;
+  function loadWasm() {
+    if (!wasmP) wasmP = (async () => {
+      const url = 'wasm/resize.wasm';
+      let mod;
+      try { mod = await WebAssembly.instantiateStreaming(fetch(url), {}); }
+      catch (e) { mod = await WebAssembly.instantiate(await (await fetch(url)).arrayBuffer(), {}); }
+      return mod.instance.exports;
+    })().catch(() => null);
+    return wasmP;
+  }
+  const MAX_SHARP_PIXELS = 36e6;
+
+  // Returns ImageData of size dw x dh, or null when the C++ path can't be used.
+  function sharpResize(wx, src, sw, sh, dw, dh, flatten) {
+    try {
+      const need = sw * sh * 4 + sh * dw * 4 + dw * dh * 4 + (1 << 20);
+      if (need > 900 * 1048576) return null;
+      wx.reset();
+      const ip = wx.alloc(src.length), op = wx.alloc(dw * dh * 4);
+      if (!ip || !op) return null;
+      new Uint8Array(wx.memory.buffer, ip, src.length).set(src);   // view made after alloc: memory may have grown
+      if (wx.resize(ip, sw, sh, op, dw, dh, flatten ? 1 : 0) !== 0) return null;
+      const out = new Uint8ClampedArray(dw * dh * 4);
+      out.set(new Uint8Array(wx.memory.buffer, op, dw * dh * 4));
+      return new ImageData(out, dw, dh);
+    } catch (e) { return null; }
+  }
+
+  // Fixed-size pixels of the decoded photo, read once per file.
+  function readPixels(bmp) {
+    const c = document.createElement('canvas'); c.width = bmp.width; c.height = bmp.height;
+    const x = c.getContext('2d', { willReadFrequently: true });
+    x.drawImage(bmp, 0, 0);
+    return x.getImageData(0, 0, bmp.width, bmp.height).data;
+  }
+
   // Find the best quality that keeps the file under `target` bytes. null = even the lowest quality is too big.
   async function fitTarget(enc, target) {
     let lo = 0.15, hi = 0.92;
@@ -246,7 +292,7 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
   function settings() {
     let maxSide = +sizeSel.value;
     if (sizeSel.value === 'custom') maxSide = Math.max(0, Math.min(12000, +customIn.value || 0));
-    return { maxSide, type: fmtSel.value, quality: q.value / 100, target: +targetSel.value };
+    return { maxSide, type: fmtSel.value, quality: q.value / 100, target: +targetSel.value, sharp: methodSel.value === 'sharp' };
   }
 
   async function encodeItem(it, S) {
@@ -259,8 +305,16 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
     }
     const lossy = LOSSY.has(S.type), target = lossy ? S.target : 0;
     const cv = document.createElement('canvas'), ctx = cv.getContext('2d', { willReadFrequently: S.type === 'image/bmp' });
+    const wx = S.sharp && S.type !== 'image/x-icon' && ow * oh <= MAX_SHARP_PIXELS && (w < ow || h < oh) ? await loadWasm() : null;
+    let pixels = null, sharpUsed = false;
     const draw = (dw, dh) => {
       cv.width = dw; cv.height = dh;
+      if (wx && (dw < ow || dh < oh)) {
+        if (!pixels) pixels = readPixels(bmp);
+        const flat = S.type === 'image/jpeg' || S.type === 'image/bmp';
+        const img = sharpResize(wx, pixels, ow, oh, dw, dh, flat);
+        if (img) { ctx.putImageData(img, 0, 0); sharpUsed = true; return; }
+      }
       if (S.type === 'image/jpeg' || S.type === 'image/bmp') { ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, dw, dh); }
       ctx.drawImage(bmp, 0, 0, dw, dh);
     };
@@ -461,7 +515,7 @@ h1 { margin: 0; font: 800 clamp(26px, 6vw, 40px)/1 var(--display); font-stretch:
   drop.addEventListener('drop', (ev) => addFiles(ev.dataTransfer.files));
 
   const again = () => files.length && process();
-  [fmtSel, targetSel].forEach((el) => el.addEventListener('change', () => { process(); }));
+  [fmtSel, targetSel, methodSel].forEach((el) => el.addEventListener('change', () => { process(); }));
   sizeSel.addEventListener('change', () => { customIn.hidden = sizeSel.value !== 'custom'; if (!customIn.hidden) customIn.focus(); again(); });
   let t1; customIn.addEventListener('input', () => { clearTimeout(t1); t1 = setTimeout(again, 400); });
   let t2; q.addEventListener('input', () => { qOut.textContent = q.value; clearTimeout(t2); t2 = setTimeout(again, 250); });
