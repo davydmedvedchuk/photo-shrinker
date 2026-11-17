@@ -38,6 +38,19 @@ python3 -m http.server
 
 Then go to `http://localhost:8000`.
 
+## Command-line version (Python)
+
+The same job for a whole folder, no browser. It lives in `cli/` and uses Pillow and pillow-heif.
+
+```
+pip install -r cli/requirements.txt
+python3 cli/shrink.py ./photos                      # 2048 px JPEGs into ./shrunk
+python3 cli/shrink.py ./photos -s 1200 -m 200       # longest side 1200 px, each file under 200 KB
+python3 cli/shrink.py ./photos -r -f webp --zip     # subfolders too, WebP, one ZIP
+```
+
+Options: `-s` size, `-f` format (jpg, png, webp, bmp, ico), `-q` quality, `-m` max KB, `-r` recursive, `--zip`, `--pdf`, `-o` output folder. HEIC works. Like the web app, it keeps the original if it can't make the file smaller.
+
 ## Rebuilding the C++ part
 
 The compiled `wasm/resize.wasm` is in the repo, so you don't need to build anything. To change `resize.cpp`, you need clang with the wasm32 target and `wasm-ld`:
