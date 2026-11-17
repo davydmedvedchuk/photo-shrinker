@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131417">
+<title>Photo shrinker: resize, compress, convert. Nothing leaves your device.</title>
+<meta name="description" content="Shrink photos in your browser. JPEG, PNG, WebP, BMP, ICO, HEIC input, max file size, ZIP and PDF. Free, no upload, no account.">
+<meta property="og:title" content="Photo shrinker">
+<meta property="og:description" content="Resize, compress, convert. Nothing leaves your device.">
+<meta property="og:image" content="https://davydmedvedchuk.github.io/photo-shrinker/about/img/social.jpg">
+<link rel="icon" href="../logo.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="../apple-touch-icon.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--deep:#131417;--deep2:#1b1d21;--mark:#F5C518;--bg:#F3F3F0;--card:#fff;--ink:#15171B;--muted:#62666F;--line:#D5D6D9;--gold:#8a6a00;--disp:"Archivo","Arial Narrow",Arial,sans-serif;--mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;font-family:"Archivo",system-ui,-apple-system,"Segoe UI",sans-serif;color:var(--ink);background:var(--bg);-webkit-text-size-adjust:100%}
+a{color:inherit;text-decoration:none}
+img{display:block;max-width:100%}
+.c{max-width:1180px;margin:0 auto;padding:0 40px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:52px;padding:0 24px;border-radius:10px;font-weight:700;font-size:16px;white-space:nowrap}
+.btn.go{background:var(--mark);color:var(--ink)}
+.btn.ghost{border:1.5px solid rgba(255,255,255,.45);color:#fff}
+.btn.dark{background:var(--deep);color:#fff}
+.btn.sm{height:40px;padding:0 16px;font-size:14px}
+.kicker{font:500 14px var(--mono);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+h1,h2,h3{margin:0;font-family:var(--disp);font-stretch:75%;text-transform:uppercase}
+h2{font-weight:800;font-size:56px;line-height:1;margin-bottom:16px}
+.sub{font-size:18px;color:var(--muted);margin:0 0 44px;max-width:640px;line-height:1.5}
+section{padding:100px 0}
+
+.hero{position:relative;color:#fff;background:var(--deep);background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:36px 36px}
+nav{display:flex;align-items:center;gap:26px;padding:20px 0}
+.brand{display:flex;align-items:center;gap:12px;font-weight:800;font-size:19px}
+.brand img{width:44px;height:33px}
+.links{display:flex;gap:24px;margin-left:auto;font-size:15px;color:#d5d6d9}
+.links a:hover{color:#fff}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:30px;align-items:end;padding:44px 0 0}
+.eyebrow{display:inline-block;font:500 14px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--mark);background:rgba(245,197,24,.12);padding:7px 12px;border-radius:999px;margin-bottom:20px}
+h1{font-size:112px;line-height:.92;font-weight:800;margin-bottom:22px}
+h1 span{color:var(--mark)}
+.lead{font-size:19px;line-height:1.5;color:#d5d6d9;margin:0 0 30px;max-width:520px}
+.cta{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:26px}
+.ticks{display:flex;gap:10px 22px;flex-wrap:wrap;font-size:15px;color:#d5d6d9;margin-bottom:34px}
+.ticks span::before{content:"✓";color:var(--mark);font-weight:800;margin-right:7px}
+.qrline{display:flex;align-items:center;gap:14px;padding-bottom:64px}
+.qrline .q{background:#fff;border-radius:12px;padding:8px}
+.qrline img{width:72px;height:72px}
+.qrline b{display:block;font-size:15px}
+.qrline small{color:#9ea2aa;font-size:13px}
+
+.phone{width:300px;height:651px;margin:0 auto -60px;background:#07080a;border:2px solid #4a525c;border-radius:54px;padding:8px;box-shadow:0 40px 80px rgba(0,0,0,.5),inset 0 0 0 1px #1d2228;position:relative;z-index:2}
+.screen{width:100%;height:100%;border-radius:45px;overflow:hidden;background:#131417;position:relative}
+.screen img.app{position:absolute;left:0;top:34px;width:100%}
+.isl{position:absolute;left:50%;top:8px;transform:translateX(-50%);width:86px;height:25px;border-radius:13px;background:#000;z-index:4}
+.isl:after{content:"";position:absolute;right:8px;top:8px;width:10px;height:10px;border-radius:50%;background:radial-gradient(circle at 40% 40%,#1b2a44,#05070b)}
+.sb{position:absolute;left:0;right:0;top:0;height:34px;z-index:3;color:#fff;font:600 13px "Archivo",sans-serif}
+.sb b{position:absolute;left:30px;top:10px}
+.sb span{position:absolute;right:24px;top:11px;display:flex;gap:5px;align-items:center}
+.pb{position:absolute;width:4px;background:#2c323a;border-radius:2px}
+
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.step{display:flex;gap:16px;background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
+.step .n{flex:0 0 44px;height:44px;border-radius:10px;background:var(--mark);color:var(--ink);font:800 22px var(--disp);display:flex;align-items:center;justify-content:center}
+.step h3{margin:6px 0 6px;font-size:26px;font-weight:800}
+.step p{margin:0;color:var(--muted);line-height:1.5}
+
+.fm{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.fb{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:26px}
+.fb h3{font-size:22px;font-weight:800;margin-bottom:14px;letter-spacing:.04em}
+.chips{display:flex;gap:8px;flex-wrap:wrap}
+.chips span{font:500 14px var(--mono);border:1.5px solid var(--ink);border-radius:8px;padding:6px 11px}
+.chips.out span{background:var(--mark)}
+.fb p{color:var(--muted);margin:14px 0 0;font-size:15px;line-height:1.5}
+
+.shots{background:var(--deep);color:#fff}
+.shots .kicker{color:var(--mark)}
+.shots .sub{color:#b4b7bd}
+.pg{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.pc{background:var(--deep2);border:1px solid #2c2f35;border-radius:16px;padding:26px}
+.pc .tag{font:500 13px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--mark);margin-bottom:12px}
+.pc h3{font-size:28px;font-weight:800;margin-bottom:8px}
+.pc p{margin:0;color:#b4b7bd;line-height:1.5;font-size:15px}
+pre{margin:16px 0 0;background:#0c0d0f;border:1px solid #2c2f35;border-radius:10px;padding:14px;font:400 13px/1.6 var(--mono);color:#e7e8ea;overflow:auto;white-space:pre}
+pre i{font-style:normal;color:var(--mark)}
+
+.faq{display:grid;grid-template-columns:1fr 1fr;gap:14px 24px}
+.qa{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:20px 22px}
+.qa b{display:block;font-size:17px;margin-bottom:8px}
+.qa p{margin:0;color:var(--muted);font-size:15px;line-height:1.5}
+
+.final{border-radius:20px;color:#fff;background:var(--deep);background-image:linear-gradient(rgba(255,255,255,.04) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.04) 1px,transparent 1px);background-size:36px 36px}
+.final .in{display:grid;grid-template-columns:1fr auto;gap:40px;align-items:center;padding:64px 56px}
+.final p{color:#c9cbd0;font-size:18px;line-height:1.5;margin:0 0 26px;max-width:520px}
+.qb{background:#fff;border-radius:16px;padding:14px}
+.qb img{width:150px;height:150px}
+footer{padding:36px 0 50px;color:var(--muted);font-size:14px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+footer a{text-decoration:underline}
+
+@media (max-width:900px){
+  .c{padding:0 18px}
+  .links,nav .btn{display:none}
+  .hero-grid{grid-template-columns:1fr;padding-top:14px;gap:10px}
+  h1{font-size:68px}
+  .lead{font-size:17px}
+  .cta .btn{flex:1;padding:0 12px}
+  .qrline{display:none}
+  .phone{transform:scale(.86);transform-origin:top center;margin-bottom:-110px}
+  section{padding:64px 0}
+  h2{font-size:40px}
+  .sub{font-size:16px;margin-bottom:28px}
+  .steps,.pg,.faq,.fm{grid-template-columns:1fr;gap:14px}
+  .final .in{grid-template-columns:1fr;padding:38px 24px}
+  .qb{display:none}
+  .eyebrow{font-size:12px}
+}
+</style>
+</head>
+<body>
+<header class="hero"><div class="c">
+  <nav>
+    <a class="brand" href="#top"><img src="../logo.svg" alt="">Photo shrinker</a>
+    <div class="links"><a href="#how">How it works</a><a href="#formats">Formats</a><a href="#faq">FAQ</a></div>
+    <a class="btn go sm" href="../">Open the app</a>
+  </nav>
+  <div class="hero-grid" id="top">
+    <div>
+      <span class="eyebrow">Resize · compress · convert</span>
+      <h1>Big photos in. <span>Small ones out.</span></h1>
+      <p class="lead">Drop your photos, pick a size, download. Everything happens in your browser, so nothing is uploaded anywhere.</p>
+      <div class="cta"><a class="btn go" href="../">Shrink photos</a><a class="btn ghost" href="#how">How it works</a></div>
+      <div class="ticks"><span>Free</span><span>No upload</span><span>No account</span><span>iPhone HEIC works</span></div>
+      <div class="qrline"><div class="q"><img src="img/qr.svg" alt=""></div><div><b>Open it on your phone</b><small>Point your camera at the code</small></div></div>
+    </div>
+    <div>
+      <div class="phone" aria-hidden="true">
+        <i class="pb" style="left:-5px;top:93px;height:25px"></i><i class="pb" style="left:-5px;top:143px;height:47px"></i><i class="pb" style="left:-5px;top:200px;height:47px"></i><i class="pb" style="right:-5px;top:164px;height:72px"></i>
+        <div class="screen"><div class="isl"></div>
+          <div class="sb"><b>9:41</b><span><svg width="16" height="11" viewBox="0 0 30 20" fill="#fff"><rect x="0" y="13" width="5" height="7" rx="1.5"/><rect x="8" y="9" width="5" height="11" rx="1.5"/><rect x="16" y="5" width="5" height="15" rx="1.5"/><rect x="24" y="0" width="5" height="20" rx="1.5"/></svg><svg width="15" height="11" viewBox="0 0 28 20" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round"><path d="M2 7a17 17 0 0 1 24 0"/><path d="M7 12a10 10 0 0 1 14 0"/><circle cx="14" cy="17" r="1.5" fill="#fff" stroke="none"/></svg><svg width="23" height="11" viewBox="0 0 42 20"><rect x="1" y="1" width="35" height="18" rx="5.5" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2"/><rect x="4" y="4" width="29" height="12" rx="3" fill="#fff"/><rect x="38" y="7" width="3" height="6" rx="1.5" fill="#fff" fill-opacity=".5"/></svg></span></div>
+          <img class="app" src="img/app.jpg" alt="">
+        </div>
+      </div>
+    </div>
+  </div>
+</div></header>
+
+<section id="how" style="padding-top:130px"><div class="c">
+  <div class="kicker">How it works</div>
+  <h2>Three steps</h2>
+  <p class="sub">No settings to learn. The defaults already make photos small enough to send.</p>
+  <div class="steps">
+    <div class="step"><div class="n">1</div><div><h3>Drop photos</h3><p>Choose them, or drag a whole batch onto the page. JPG, PNG, WebP, HEIC and more.</p></div></div>
+    <div class="step"><div class="n">2</div><div><h3>Pick size</h3><p>Longest side in pixels, a format, a quality. Or just say "under 200 KB".</p></div></div>
+    <div class="step"><div class="n">3</div><div><h3>Download</h3><p>Save one by one, share from your phone, or take all of them as a ZIP or a PDF.</p></div></div>
+  </div>
+</div></section>
+
+<section id="formats" style="padding-top:20px"><div class="c">
+  <div class="kicker">Formats</div>
+  <h2>Most of what you have</h2>
+  <p class="sub">Photos from an iPhone, screenshots, old BMP files. It opens them and writes what you need.</p>
+  <div class="fm">
+    <div class="fb"><h3>In</h3><div class="chips"><span>JPG</span><span>PNG</span><span>WebP</span><span>HEIC</span><span>BMP</span><span>GIF</span></div><p>HEIC is the format iPhones use by default. It is converted right in the page.</p></div>
+    <div class="fb"><h3>Out</h3><div class="chips out"><span>JPEG</span><span>PNG</span><span>WebP</span><span>BMP</span><span>ICO</span><span>ZIP</span><span>PDF</span></div><p>ICO makes favicons (up to 256 px). PDF puts each photo on its own A4 page.</p></div>
+  </div>
+</div></section>
+
+<section class="shots"><div class="c">
+  <div class="kicker">Inside</div>
+  <h2>Small things that matter</h2>
+  <p class="sub">The parts that make it more than a resize button.</p>
+  <div class="pg">
+    <div class="pc"><div class="tag">Max file size</div><h3>Under 200 KB</h3><p>Say how big a file may be. The app finds the best quality that fits, and shrinks the picture a little if it has to.</p></div>
+    <div class="pc"><div class="tag">C++ · WebAssembly</div><h3>Sharp resizing</h3><p>The default scaler is a Lanczos resampler written in C++ and compiled to a 4 KB module. If it cannot load, the browser's own scaler takes over.</p></div>
+    <div class="pc"><div class="tag">Python · command line</div><h3>Whole folders</h3><p>For hundreds of photos there is a small CLI, and a Windows exe built on GitHub.</p><pre><i>$</i> shrink ./photos -s 1200 -m 200</pre></div>
+  </div>
+</div></section>
+
+<section id="faq"><div class="c">
+  <div class="kicker">FAQ</div>
+  <h2 style="margin-bottom:30px">Questions</h2>
+  <div class="faq">
+    <div class="qa"><b>Are my photos uploaded?</b><p>No. The page does all the work on your device. There is no server that receives them.</p></div>
+    <div class="qa"><b>What does it cost?</b><p>Nothing. No account, no ads. The code is open under the MIT licence.</p></div>
+    <div class="qa"><b>Is metadata removed?</b><p>Yes. Photos are re-encoded, so EXIF data such as location is dropped. The rotation is kept.</p></div>
+    <div class="qa"><b>Can I undo the shrinking?</b><p>No, lost detail does not come back. Keep your originals and send the small copies.</p></div>
+  </div>
+</div></section>
+
+<section style="padding-top:0"><div class="c">
+  <div class="final"><div class="in">
+    <div><h2>Shrink the next batch.</h2><p>It takes a few seconds, and nothing leaves your device.</p><a class="btn go" href="../">Open Photo shrinker</a></div>
+    <div class="qb"><img src="img/qr.svg" alt=""></div>
+  </div></div>
+  <footer><span>© Davyd Medvedchuk</span><span>MIT · <a href="https://github.com/davydmedvedchuk/photo-shrinker">GitHub</a></span></footer>
+</div></section>
+</body>
+</html>

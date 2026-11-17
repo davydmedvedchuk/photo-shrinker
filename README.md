@@ -4,7 +4,7 @@
 
 Resize, compress and convert photos in your browser. Nothing is uploaded.
 
-**[Open the app](https://davydmedvedchuk.github.io/photo-shrinker/)**
+**[Open the app](https://davydmedvedchuk.github.io/photo-shrinker/)** · **[Website](https://davydmedvedchuk.github.io/photo-shrinker/about/)**
 
 Pick photos, choose a size and a format, save. One photo or a ZIP. It runs entirely in the page, so your pictures never leave your device. No account, no ads, no install.
 
