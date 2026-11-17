@@ -8,6 +8,8 @@ Resize, compress and convert photos in your browser. Nothing is uploaded.
 
 Pick photos, choose a size and a format, save. One photo or a ZIP. It runs entirely in the page, so your pictures never leave your device. No account, no ads, no install.
 
+Smaller files also mean some lost quality, and it can't be brought back. Keep your originals and send the small copies.
+
 ## What it does
 
 - **Resize.** Longest side: original, 3000, 2048, 1600, 1200, 800, 400 px or any number you type.
